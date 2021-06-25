@@ -30,13 +30,19 @@ struct SignUpView: View {
                 VStack {
                     TextField("Email Address", text: $email)
                         .modifier(CustomField())
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
                     TextField("Username", text: $username)
                         .modifier(CustomField())
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
                     SecureField("Password", text: $password)
                         .modifier(CustomField())
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
                     
                     Button(action: {
-                        self.signIn()
+                        self.signUp()
                     }, label: {
                         Text("Sign Up")
                             .foregroundColor(Color.white)
@@ -56,14 +62,15 @@ struct SignUpView: View {
         
         
     }
-    func signIn() {
+    func signUp() {
         guard !username.trimmingCharacters(in: .whitespaces).isEmpty,
               !password.trimmingCharacters(in: .whitespaces).isEmpty,
               !email.trimmingCharacters(in: .whitespaces).isEmpty,
               password.count >= 6 else {
             return
         }
-        
+        print("here")
+        model.signUp(email: email, username: username, password: password)
         
     }
 }

@@ -24,6 +24,10 @@ class AppStateModel: ObservableObject {
     // Current user being chatted with
     
     // Message, Conversations
+    
+    init() {
+        self.showSignInView = Auth.auth().currentUser == nil
+    }
 }
 
 
@@ -61,12 +65,59 @@ extension AppStateModel {
 // Sign in & Sign up
 extension AppStateModel {
     func signIn(username: String, password: String) {
+        // Get Email from db
+        db.collection("users").document(username).getDocument {snapshot, error in
+            guard let email = snapshot?.data()?["email"] as? String, error == nil else {
+                return
+            }
+            self.auth.signIn(withEmail: email, password: password, completion: {result, error in
+                guard error == nil, result != nil else {
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.currentEmail = email
+                    self.currentUsername = username
+                    self.showSignInView = false
+                }
+                
+            })
+            
+        }
         
+        // try to sign in
+        
+       
     }
     func signUp(email: String, username: String, password: String) {
+        // Create Account
+        auth.createUser(withEmail: email, password: password) { result, error in
+            guard result != nil, error == nil else {
+                return
+            }
+            
+        }
         
+        // Insert username into database
+        let data = ["email" : email, "username": username]
+        
+        self.db.collection("users").document(username).setData(data) {error in
+            guard error == nil else {
+                return
+            }
+            DispatchQueue.main.async {
+                self.currentUsername = username
+                self.currentEmail = email
+                self.showSignInView = false
+            }
+        }
     }
     func signOut() {
-        
+        do {
+            try auth.signOut()
+            self.showSignInView = true
+        }
+        catch {
+            print(error)
+        }
     }
 }
