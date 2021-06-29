@@ -11,13 +11,14 @@ struct ConversationListView: View {
     @EnvironmentObject var model: AppStateModel
     @State var username: String = ""
     @State var showChat: Bool = false
+    @State var showSearch: Bool = false
     
     var body: some View {
         NavigationView {
             ScrollView {
                 ForEach(model.conversations, id: \.self) { name in
                     NavigationLink(
-                        destination: ChatView(userName: name),
+                        destination: ChatView(otherUsername: name),
                         label: {
                             HStack {
                                 Circle()
@@ -36,7 +37,7 @@ struct ConversationListView: View {
                 }
                 if !username.isEmpty {
                     NavigationLink(
-                        destination: ChatView(userName: username),
+                        destination: ChatView(otherUsername: username),
                         isActive: $showChat,
                         label: {
                             Text("")
@@ -56,11 +57,14 @@ struct ConversationListView: View {
                 ToolbarItem(placement: ToolbarItemPlacement.navigationBarTrailing) {
                     NavigationLink(
                         destination: SearchView {name in
+                            self.showSearch = false
+                            
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                 self.username = name
                                 self.showChat = true
                             }
                         },
+                        isActive: $showSearch,
                         label: {
                             Image(systemName: "magnifyingglass")
                         })

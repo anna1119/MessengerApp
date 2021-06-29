@@ -22,6 +22,7 @@ class AppStateModel: ObservableObject {
     
     var otherUsername: String = ""
     var conversationListener: ListenerRegistration?
+    var chatListener: ListenerRegistration?
     // Current user being chatted with
     
     // Message, Conversations
@@ -67,15 +68,40 @@ extension AppStateModel {
 
 extension AppStateModel {
     func observeChat() {
-        
+        createConversation()
+        chatListener = db.collection("users").document(currentUsername).collection("chats").document(otherUsername).collection("messages").addSnapshotListener {snapshot, error in
+            guard let objects = snapshot?.documents.compactMap({$0.data()}), error == nil else {
+                return
+            }
+            let messages: [Message] = objects.compactMap({
+                guard let date = ISO8601DateFormatter().date(from: $0["created"] as? String ?? "") else {
+                    return nil
+                }
+                return Message(text: $0["text"] as? String ?? "", type: $0["sender"] as? String == self.currentUsername ? .sent : .received, created: date)
+            }).sorted(by: {first, second in
+                return first.created < second.created
+                
+            })
+            
+            DispatchQueue.main.async {
+                self.messages = messages
+            }
+        }
     }
     
     func sendMessage(text: String) {
+        let newMessageId = UUID().uuidString
         
+        let data = ["text": text, "sender": currentUsername, "created": ISO8601DateFormatter().string(from: Date()) ]
+        
+        db.collection("users").document(currentUsername).collection("chats").document(otherUsername).collection("messages").document(newMessageId).setData(data)
+        
+        db.collection("users").document(otherUsername).collection("chats").document(currentUsername).collection("messages").document(newMessageId).setData(data)
     }
     
-    func createConversationIfNeeded() {
-        
+    func createConversation() {
+        db.collection("users").document(currentUsername).collection("chats").document(otherUsername).setData(["created": "true"])
+        db.collection("users").document(otherUsername).collection("chats").document(currentUsername).setData(["created": "true"])
     }
 }
 

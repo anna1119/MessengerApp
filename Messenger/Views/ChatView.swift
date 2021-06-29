@@ -9,12 +9,20 @@ import SwiftUI
 
 struct ChatView: View {
     @State var message: String = ""
-    var userName: String
+    @EnvironmentObject var model: AppStateModel
+    let otherUsername: String
+    
+    init(otherUsername: String) {
+        self.otherUsername = otherUsername
+    }
     var body: some View {
         VStack {
             ScrollView {
-                ChatRow(type: .sent, text: "Hello World")
-                ChatRow(type: .received, text: "Hello World")
+                ForEach(model.messages, id: \.self) { message in
+                    ChatRow(type: message.type, text: message.text)
+                        .padding(3)
+                    
+                }
                 
             }
             
@@ -27,7 +35,11 @@ struct ChatView: View {
             }
             .padding()
         }
-        .navigationTitle(userName)
+        .navigationBarTitle(otherUsername, displayMode: .inline)
+        .onAppear {
+            model.otherUsername = otherUsername
+            model.observeChat()
+        }
     }
 }
 

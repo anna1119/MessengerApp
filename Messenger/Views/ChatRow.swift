@@ -37,7 +37,7 @@ struct ChatRow: View {
             }
             
             HStack {
-                Text("Hello")
+                Text(text)
                     .foregroundColor(isSender ? Color.white : Color(.label))
                     .padding()
                     
